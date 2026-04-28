@@ -1,0 +1,245 @@
+
+/* Solo animación (perrito + partículas) */
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: #0b1020;
+    overflow: hidden;
+}
+
+/* Formulario (encima de la animación) */
+.login-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 2rem));
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.login-logo {
+    display: block;
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin: 0 auto 0.75rem;
+}
+
+.login-container form > div {
+    margin-bottom: 0.9rem;
+}
+
+.login-container h1 {
+    margin: 0 0 1rem;
+    color: #0b1020;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.login-container label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #0b1020;
+    font-weight: 600;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid rgba(11, 16, 32, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    outline: none;
+}
+
+.login-container input:focus {
+    border-color: rgba(47, 107, 255, 0.8);
+    box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.18);
+}
+
+.login-container button {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border: none;
+    border-radius: 10px;
+    background: #2f6bff;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.login-footer {
+    margin-top: 1.1rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(11, 16, 32, 0.65);
+}
+
+.login-footer span {
+    color: #2f6bff;
+    font-weight: 700;
+}
+
+.login-container button:hover {
+    filter: brightness(1.05);
+}
+
+.server-message {
+    min-height: 1.2rem;
+    margin: 0.8rem 0 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.server-message.ok {
+    color: #15803d;
+}
+
+.server-message.error {
+    color: #b91c1c;
+}
+
+/* Partículas */
+.particles {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #2f6bff;
+    border-radius: 50%;
+    animation: rise 6s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes rise {
+    0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* Perrito */
+.dog-animation-container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.running-dog {
+    position: absolute;
+    bottom: 10%;
+    width: 120px;
+    height: 60px;
+    transform: scale(1.5);
+    animation: runAcross 15s linear infinite;
+}
+
+@keyframes runAcross {
+    0% { left: -150px; }
+    100% { left: 110%; }
+}
+
+.head, .body, .leg {
+    position: absolute;
+    background-color: rgba(224, 224, 224, 0.8);
+    border: 2px solid #aaa;
+    box-shadow: 0 0 5px rgba(47, 107, 255, 0.18);
+}
+
+.head {
+    width: 30px;
+    height: 25px;
+    border-radius: 5px 20px 5px 5px;
+    top: 0;
+    left: 30px;
+    transform-origin: 50% 100%;
+    animation: headBob 0.3s infinite alternate;
+}
+
+.ear {
+    width: 10px;
+    height: 10px;
+    background-color: #aaa;
+    position: absolute;
+    top: -5px;
+    right: 0;
+    transform: rotate(45deg);
+    border-radius: 0 5px 0 0;
+}
+
+.body {
+    width: 60px;
+    height: 30px;
+    border-radius: 10px;
+    top: 15px;
+    left: 0;
+}
+
+.tail {
+    position: absolute;
+    width: 15px;
+    height: 5px;
+    background-color: rgba(224, 224, 224, 0.8);
+    border: 2px solid #aaa;
+    border-radius: 0 5px 5px 0;
+    top: 25px;
+    left: -15px;
+    transform-origin: 100% 50%;
+    animation: tailWag 0.5s infinite alternate;
+}
+
+.leg {
+    width: 5px;
+    height: 25px;
+    border-radius: 2px;
+    top: 45px;
+    transform-origin: top;
+    background-color: #2C2C2C;
+}
+
+.front-leg-1 { left: 40px; animation: legMovement 0.3s infinite alternate; }
+.front-leg-2 { left: 55px; animation: legMovement 0.3s 0.15s infinite alternate; }
+.back-leg-1 { left: 10px; animation: legMovement 0.3s 0.05s infinite alternate; }
+.back-leg-2 { left: 25px; animation: legMovement 0.3s 0.2s infinite alternate; }
+
+@keyframes headBob {
+    from { transform: rotate(-5deg); }
+    to { transform: rotate(5deg); }
+}
+
+@keyframes tailWag {
+    from { transform: rotate(15deg); }
+    to { transform: rotate(-15deg); }
+}
+
+@keyframes legMovement {
+    from { transform: rotate(-10deg); }
+    to { transform: rotate(10deg); }
+}
+  
+  

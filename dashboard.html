@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1020, #1e3a8a);
+            color: #fff;
+        }
+        .card {
+            width: min(560px, calc(100vw - 2rem));
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        h1 { margin: 0 0 0.8rem; }
+        p { margin: 0.35rem 0; }
+        a {
+            color: #fff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1 id="welcome-title">Bienvenido al dashboard</h1>
+        <p id="welcome-user"></p>
+        <p><a href="/">Cerrar sesión</a></p>
+    </main>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const usuario = params.get('usuario');
+            const title = document.getElementById('welcome-title');
+            const user = document.getElementById('welcome-user');
+
+            if (usuario) {
+                title.textContent = 'Bienvenido al dashboard';
+                user.textContent = 'Usuario: ' + usuario;
+            } else {
+                user.textContent = 'No se recibió nombre de usuario.';
+            }
+        })();
+    </script>
+</body>
+</html>
