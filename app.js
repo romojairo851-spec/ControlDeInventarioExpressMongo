@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require("cors");
 const path = require('path');
 const connectDB = require('./config');
 const {
@@ -16,6 +17,15 @@ const { validateLoginPayload, login } = require('./services/authService');
 
 //definicion de la app y el puerto
 const app = express();
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));
+
+app.use(express.json());
+
 const port = process.env.PORT || 3000;
 
 // Middleware para recibir JSON, formularios y archivos estaticos (html, css, js, img).
