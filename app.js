@@ -21,11 +21,15 @@ const port = process.env.PORT || 3000;
 // Middleware para recibir JSON, formularios y archivos estaticos (html, css, js, img).
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname)));
+//app.use(express.static(path.join(__dirname)));
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
     // Entrega la vista principal del login.
     res.sendFile(path.join(__dirname, 'index.html'));
+});*/
+
+app.get('/', (req, res) => {
+    res.send("API funcionando correctamente");
 });
 
 app.get('/login', (req, res) => {
