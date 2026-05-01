@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require("cors");
-const path = require('path');
 const connectDB = require('./config');
 const {
     getCreatePayload,
@@ -13,172 +12,166 @@ const {
 } = require('./services/usuarioService');
 const { validateLoginPayload, login } = require('./services/authService');
 
-// app.js mantiene las rutas HTTP (controladores) y delega la logica de negocio a /services.
-
-//definicion de la app y el puerto
 const app = express();
-
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"]
-}));
-
-app.use(express.json());
-
 const port = process.env.PORT || 3000;
 
-// Middleware para recibir JSON, formularios y archivos estaticos (html, css, js, img).
+// Middlewares
+app.use(cors({
+    origin: ["http://localhost:5173", "http://localhost:3001"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-//app.use(express.static(path.join(__dirname)));
 
-/*app.get('/', (req, res) => {
-    // Entrega la vista principal del login.
-    res.sendFile(path.join(__dirname, 'index.html'));
-});*/
-
+// Ruta raíz (solo para verificar que la API funciona)
 app.get('/', (req, res) => {
-    res.send("API funcionando correctamente");
-});
-
-app.get('/login', (req, res) => {
-    // Se bloquea GET /login para forzar el uso de POST /login.
-    return res.status(405).json({
-        message: 'Metodo no permitido. Usa POST /login con usuario y password.',
+    res.json({ 
+        message: "API funcionando correctamente",
+        endpoints: {
+            login: "POST /login",
+            usuarios: "GET /usuariosdg",
+            crearUsuario: "POST /usuariosdg",
+            buscarUsuario: "GET /usuariosdg/:usuario",
+            actualizarUsuario: "PUT /usuariosdg/:usuario",
+            eliminarUsuario: "DELETE /usuariosdg/:usuario"
+        }
     });
 });
 
+// ============= ENDPOINT DE LOGIN (SOLO JSON) =============
+app.post('/login', async (req, res) => {
+    try {
+        // Validar payload
+        const loginPayload = validateLoginPayload(req.body);
+        if (!loginPayload.isValid) {
+            return res.status(400).json({ 
+                success: false,
+                message: loginPayload.message 
+            });
+        }
+
+        // Autenticar usuario
+        const authResult = await login(loginPayload.credentials);
+        if (!authResult.ok) {
+            return res.status(authResult.statusCode).json({ 
+                success: false,
+                message: authResult.message 
+            });
+        }
+
+        // Login exitoso - devolver solo JSON (sin redirect)
+        return res.status(200).json({ 
+            success: true,
+            message: 'Login exitoso',
+            user: authResult.user
+        });
+        
+    } catch (error) {
+        console.error('Error en login:', error);
+        return res.status(500).json({ 
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message 
+        });
+    }
+});
+
+// ============= ENDPOINTS CRUD USUARIOS =============
+
+// Crear usuario
 app.post('/usuariosdg', async (req, res) => {
-    // Endpoint CRUD: crea usuario. La validacion y persistencia viven en usuarioService.
     const payloadResult = getCreatePayload(req.body);
     if (!payloadResult.isValid) {
-        return res.status(400).json({ message: payloadResult.message });
+        return res.status(400).json({ success: false, message: payloadResult.message });
     }
 
     try {
         const safeUser = await createUser(payloadResult.data);
-        return res.status(201).json({ message: 'Usuario creado', user: safeUser });
+        return res.status(201).json({ success: true, message: 'Usuario creado', user: safeUser });
     } catch (error) {
         if (error?.code === 11000) {
-            return res.status(409).json({ message: 'El usuario ya existe' });
+            return res.status(409).json({ success: false, message: 'El usuario ya existe' });
         }
-        return res.status(500).json({ message: 'Error al crear usuario', error: error.message });
+        return res.status(500).json({ success: false, message: 'Error al crear usuario', error: error.message });
     }
 });
 
-//codigo para el login
-app.post('/login', async (req, res) => {
-    // Endpoint de autenticacion: solo maneja request/response, el flujo de login vive en authService.
-    const expectsJson = req.headers.accept?.includes('application/json');
-
-    const respondError = (statusCode, message) => {
-        // Respuesta dual: JSON para clientes API y redirect para navegadores.
-        if (expectsJson) {
-            return res.status(statusCode).json({ message });
-        }
-        return res.redirect(`/?status=error&message=${encodeURIComponent(message)}`);
-    };
-
-    const loginPayload = validateLoginPayload(req.body);
-    if (!loginPayload.isValid) {
-        return respondError(400, loginPayload.message);
-    }
-
-    try {
-        const authResult = await login(loginPayload.credentials);
-        if (!authResult.ok) {
-            return respondError(authResult.statusCode, authResult.message);
-        }
-
-        const safeUser = authResult.user;
-        if (expectsJson) {
-            return res.json({ message: 'Usuario encontrado', user: safeUser });
-        }
-        // Flujo web: si login es correcto, redirige al dashboard.
-        return res.redirect('/dashboard.html?usuario=' + encodeURIComponent(safeUser.usuario));
-    } catch (error) {
-        if (expectsJson) {
-            return res.status(500).json({ message: 'Error al buscar el usuario', error: error.message });
-        }
-        return res.redirect('/?status=error&message=' + encodeURIComponent('Error interno del servidor'));
-    }
-});
-
-//listar usuarios
+// Listar todos los usuarios
 app.get('/usuariosdg', async (req, res) => {
-    // Endpoint CRUD: listar usuarios.
     try {
         const usuarios = await listUsers();
-        return res.json(usuarios);
+        return res.json({ success: true, data: usuarios });
     } catch (error) {
-        return res.status(500).send('Error al obtener usuarios');
+        return res.status(500).json({ success: false, message: 'Error al obtener usuarios' });
     }
 });
 
-//Buscar usuario por nombre 
+// Buscar usuario por nombre
 app.get('/usuariosdg/:usuario', async (req, res) => {
-    // Endpoint CRUD: buscar usuario por nombre.
-    const { usuario } = req.params || {};
+    const { usuario } = req.params;
     try {
         const usuarioEncontrado = await findUserByUsername(usuario);
         if (!usuarioEncontrado) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
         }
-        return res.json(usuarioEncontrado);
+        return res.json({ success: true, data: usuarioEncontrado });
     } catch (error) {
-        return res.status(500).send('Error al buscar usuario');
+        return res.status(500).json({ success: false, message: 'Error al buscar usuario' });
     }
 });
 
-//Actualizar usuario
+// Actualizar usuario
 app.put('/usuariosdg/:usuario', async (req, res) => {
-    // Endpoint CRUD: actualizar usuario por nombre.
-    const usuario = typeof req.params?.usuario === 'string' ? req.params.usuario.trim() : '';
+    const usuario = req.params.usuario?.trim() || '';
     const payloadResult = getUpdatePayload(req.body);
     if (!payloadResult.isValid) {
-        return res.status(400).json({ message: payloadResult.message });
+        return res.status(400).json({ success: false, message: payloadResult.message });
     }
 
     try {
         const usuarioActualizado = await updateUserByUsername(usuario, payloadResult.data);
-
         if (!usuarioActualizado) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
         }
-
-        return res.json({ message: 'Usuario actualizado', user: usuarioActualizado });
+        return res.json({ success: true, message: 'Usuario actualizado', user: usuarioActualizado });
     } catch (error) {
         if (error?.code === 11000) {
-            return res.status(409).json({ message: 'El usuario ya existe' });
+            return res.status(409).json({ success: false, message: 'El nombre de usuario ya existe' });
         }
-        return res.status(500).json({ message: 'Error al actualizar usuario' });
+        return res.status(500).json({ success: false, message: 'Error al actualizar usuario' });
     }
 });
 
-//Eliminar usuario por nombre   
+// Eliminar usuario
 app.delete('/usuariosdg/:usuario', async (req, res) => {
-    // Endpoint CRUD: eliminar usuario por nombre.
-    const { usuario } = req.params || {};
+    const { usuario } = req.params;
     try {
         const usuarioEliminado = await deleteUserByUsername(usuario);
         if (!usuarioEliminado) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
         }
-        return res.json({ message: 'Usuario eliminado', user: usuarioEliminado });
+        return res.json({ success: true, message: 'Usuario eliminado', user: usuarioEliminado });
     } catch (error) {
-        return res.status(500).json({ message: 'Error al eliminar usuario' });
+        return res.status(500).json({ success: false, message: 'Error al eliminar usuario' });
     }
 });
-//iniciar el servidor
+
+// Iniciar servidor
 connectDB()
     .then(() => {
-        // Solo se levanta el servidor si la conexion a MongoDB fue exitosa.
         app.listen(port, () => {
-            console.log(`Servidor en http://localhost:${port}`);
+            console.log(`✅ Servidor API corriendo en http://localhost:${port}`);
+            console.log(`📋 Endpoints disponibles:`);
+            console.log(`   POST   /login`);
+            console.log(`   GET    /usuariosdg`);
+            console.log(`   POST   /usuariosdg`);
+            console.log(`   GET    /usuariosdg/:usuario`);
+            console.log(`   PUT    /usuariosdg/:usuario`);
+            console.log(`   DELETE /usuariosdg/:usuario`);
         });
     })
     .catch((err) => {
-        console.error('No se pudo iniciar la app:', err?.message || err);
+        console.error('❌ No se pudo iniciar la app:', err?.message || err);
         process.exit(1);
     });
