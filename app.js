@@ -15,12 +15,24 @@ const { validateLoginPayload, login } = require('./services/authService');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const allowedOrigins = ["http://localhost:5173", "http://localhost:3001",// Desarrollo
+    process.env.FRONTEND_URL = "https://controldeinventarioreact.onrender.com "    //Producción
+];
+
 // Middlewares
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:3001"],
+    origin: function (origin, callback) {
+        if (!origin ) return callback(null, true); // Permitir solicitudes sin origen (como Postman)
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Origen no permitido por CORS'));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"]
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -161,8 +173,8 @@ app.delete('/usuariosdg/:usuario', async (req, res) => {
 connectDB()
     .then(() => {
         app.listen(port, () => {
-            console.log(`✅ Servidor API corriendo en http://localhost:${port}`);
-            console.log(`📋 Endpoints disponibles:`);
+            console.log(`   Servidor API corriendo en puerto:${port}`);
+            console.log(`   Endpoints disponibles:`);
             console.log(`   POST   /login`);
             console.log(`   GET    /usuariosdg`);
             console.log(`   POST   /usuariosdg`);
