@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require("cors");
 const connectDB = require('./config');
@@ -15,9 +16,14 @@ const { validateLoginPayload, login } = require('./services/authService');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:3001",// Desarrollo
-    process.env.FRONTEND_URL = "https://controldeinventarioreact.onrender.com "    //Producción
+const allowedOrigins = [
+    "http://localhost:5173", 
+    "http://localhost:3001",
+    "https://controldeinventarioreact.onrender.com",
+    process.env.FRONTEND_URL // Por si necesitas agregar más URLs desde variables de entorno
 ];
+
+console.log('🔒 CORS allowed origins:', allowedOrigins.filter(Boolean));
 
 // Middlewares
 app.use(cors({
