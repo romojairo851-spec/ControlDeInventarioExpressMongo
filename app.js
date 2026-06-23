@@ -23,7 +23,7 @@ const allowedOrigins = [
     process.env.FRONTEND_URL // Por si necesitas agregar más URLs desde variables de entorno
 ];
 
-console.log('🔒 CORS allowed origins:', allowedOrigins.filter(Boolean));
+console.log('CORS allowed origins:', allowedOrigins.filter(Boolean));
 
 // Middlewares
 app.use(cors({
@@ -190,6 +190,6 @@ connectDB()
         });
     })
     .catch((err) => {
-        console.error('❌ No se pudo iniciar la app:', err?.message || err);
+        console.error('No se pudo iniciar la app:', err?.message || err);
         process.exit(1);
     });
